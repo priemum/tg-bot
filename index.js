@@ -3,31 +3,26 @@ const {StringSession} = require("telegram/sessions");
 const input = require("input");
 const {NewMessage} = require("telegram/events"); // npm i input
 require('dotenv').config()
+const fs = require('fs')
+const path = require("path");
 const apiId = +process.env.API_ID;
 const apiHash = process.env.API_HASH;
-const stringSession = new StringSession(process.env.SESSION_KEY); // fill this later with the value from session.save()
-let client
 
+
+
+
+
+// const stringSession = new StringSession(process.env.SESSION_KEY); // fill this later with the value from session.save()
+let client;
 
 (async () => {
     console.log("start...");
-    client = new TelegramClient(stringSession, apiId, apiHash, {
-        connectionRetries: 5,
-    });
-    await client.start({
-        phoneNumber: async () => await input.text("Please enter your number: "),
-        password: async () => await input.text("Please enter your password: "),
-        phoneCode: async () =>
-            await input.text("Please enter the code you received: "),
-        onError: (err) => console.log(err),
-    });
+
+    await login()
     console.log("You should now be connected.");
-    // console.log(client.session.save()); // Save this string to avoid logging in again
-    await client.sendMessage("mellonges", {message: "Отъебаный Джо запущен..."});
 
 
 
-// adds an event handler for new messages
     client.addEventHandler(eventPrint, new NewMessage({}));
 
 
@@ -42,22 +37,55 @@ async function eventPrint(event) {
     if (!event.isPrivate && message.senderId.value === authorId) {
 
             console.log(message)
-            if (message.peerId.channelId) {
-                return
-                instruction = new Api.messages.SendReaction({
-                    msgId: message.id,
-                    big: false, reaction: "👍", peer: new Api.InputPeerChannel({channelId: message.peerId.channelId.value, accessHash: message.peerId.channelId.value })})
-            } else if (message.peerId.chatId) {
                     instruction = new Api.messages.SendReaction({
                         msgId: message.id,
-                        big: true, reaction: "👍", peer: new Api.InputPeerChat({chatId: message.peerId.chatId.value})
+                        big: true, reaction: "👍", peer: message.chatId
 
-            })} else console.log("no script")
-
-
-            const result = await client.invoke(instruction)
-            // console.log(result)
-            // const sender = await message.getSender();
-            // console.log("sender is",sender);
+            })
+        await client.invoke(instruction)
     }
+
+
+}
+
+
+async function login() {
+    try {
+        // const isFile = path.existsSync("session.txt")
+        fs.stat("session.txt", (isFile) => {
+            console.log(isFile)
+            return
+        })
+
+            if (1) {
+                const stringSession = fs.readFileSync("session.txt").toString("utf-8")
+                client = new TelegramClient(stringSession, apiId, apiHash, {
+                    connectionRetries: 5,
+                });
+            } else {
+                const newStringSession = new StringSession("");
+                client = new TelegramClient(newStringSession, apiId, apiHash, {
+                    connectionRetries: 5,
+                });
+                console.log("its work?")
+                await client.start({
+                    phoneNumber: async () => await input.text("Please enter your number: "),
+                    password: async () => await input.text("Please enter your password: "),
+                    phoneCode: async () =>
+                        await input.text("Please enter the code you received: "),
+                    onError: (err) => console.log(err),
+                });
+
+                const stringSession = client.session.save()
+
+                fs.writeFileSync("session.txt", stringSession, {encoding: "utf-8"})
+
+            }
+            await client.sendMessage("mellonges", {message: "Отъебаный Джо запущен..."});
+
+    } catch (e) {
+
+        console.error(e)
+    }
+
 }
