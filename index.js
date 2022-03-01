@@ -6,9 +6,10 @@ require('dotenv').config()
 const fs = require('fs')
 const apiId = +process.env.API_ID;
 const apiHash = process.env.API_HASH;
+const authorId = BigInt(process.env.AUTHOR_ID)
+const commandChatId = BigInt(-process.env.COMMAND_CHAT_ID)
 let session
 let isLogin
-
 fs.access("session.txt", function (error) {
     if (error) {
         console.log("session file  not found");
@@ -22,8 +23,6 @@ fs.access("session.txt", function (error) {
     start().then(() => console.log("You should now be connected."))
 
 })
-
-
 
 
 let client;
@@ -46,7 +45,7 @@ async function start() {
             fs.writeFileSync("session.txt", saveSession, {encoding: "utf-8"})
         }
         client.addEventHandler(eventPrint, new NewMessage({}));
-        client.sendMessage("mellonges", {message: "Отъебаный Джо запущен..."})
+        client.sendMessage(process.env.AUTHOR, {message: "Отъебаный Джо запущен..."})
     } catch (e) {
         console.error(e)
     }
@@ -58,7 +57,7 @@ async function start() {
 async function eventPrint(event) {
     const message = event.message;
     let instruction
-    const authorId = BigInt(process.env.AUTHOR_ID)
+
 
     // Checks if it's a private message (from user or bot)
     if (!event.isPrivate && message.senderId.value === authorId) {
@@ -68,6 +67,14 @@ async function eventPrint(event) {
         })
         await client.invoke(instruction)
     }
-}
+    if (event.chatId.value === commandChatId) {
+        const regexp = /(?<=t.me+\/\+).*/
+        const hash = message.message.match(regexp)[0]
+        if (hash) {
+            instruction = new Api.messages.ImportChatInvite({hash})
+            await client.invoke(instruction)
+        }
 
+    }
+}
 
