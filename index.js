@@ -66,7 +66,7 @@ async function eventPrint(event) {
     }
 
     try {
-        if (event.chatId.value === commandChatId) {
+        if (event.chatId.value === commandChatId && message.senderId.value === authorId) {
             const isInviteLinkRegexp = /(?<=t.me\/)./
             const chatUsernameLinkReg = /(?<=t.me\/).*/
             const isChannelName = message.message.match(chatUsernameLinkReg)[0]
