@@ -1,0 +1,6 @@
+# Project exclude paths
+/node_modules/
+.env
+.idea
+session.txt
+.DS_store
