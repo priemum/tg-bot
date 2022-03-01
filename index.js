@@ -8,6 +8,7 @@ const apiId = +process.env.API_ID;
 const apiHash = process.env.API_HASH;
 let session
 let isLogin
+
 fs.access("session.txt", function (error) {
     if (error) {
         console.log("session file  not found");
