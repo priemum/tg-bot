@@ -3,3 +3,4 @@
 .env
 .idea
 session.txt
+.Ds_store
