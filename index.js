@@ -60,7 +60,7 @@ async function eventPrint(event) {
 
 
     // Checks if it's a private message (from user or bot)
-    if (!event.isPrivate && message.senderId.value === authorId) {
+    if (!event.isPrivate && message.senderId.value === authorId && event.chatId.value !== commandChatId) {
         instruction = new Api.messages.SendReaction({
             msgId: message.id,
             big: true, reaction: "👍", peer: message.chatId
@@ -68,12 +68,25 @@ async function eventPrint(event) {
         await client.invoke(instruction)
     }
     if (event.chatId.value === commandChatId) {
-        const regexp = /(?<=t.me+\/\+).*/
-        const hash = message.message.match(regexp)[0]
-        if (hash) {
-            instruction = new Api.messages.ImportChatInvite({hash})
+        const isInviteLinkRegexp = /(?<=t.me\/)./
+        const chatUsernameLinkReg = /(?<=t.me\/).*/
+        const isChannelName = message.message.match(chatUsernameLinkReg)[0]
+        console.log(isChannelName, "да да 1")
+        if (message.message.match(isInviteLinkRegexp)[0] === "+") {
+            const regexpInviteLink = /(?<=t.me+\/\+).*/
+            const hash = message.message.match(regexpInviteLink)[0]
+            if (hash) {
+                instruction = new Api.messages.ImportChatInvite({hash})
+                await client.invoke(instruction)
+            }
+        } else if (isChannelName) {
+            instruction = new Api.channels.JoinChannel({
+               channel: isChannelName
+            })
             await client.invoke(instruction)
         }
+
+
 
     }
 }
