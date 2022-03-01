@@ -10,6 +10,7 @@ const authorId = BigInt(process.env.AUTHOR_ID)
 const commandChatId = BigInt(-process.env.COMMAND_CHAT_ID)
 let session
 let isLogin
+
 fs.access("session.txt", function (error) {
     if (error) {
         console.log("session file  not found");
@@ -24,7 +25,6 @@ fs.access("session.txt", function (error) {
 
 })
 
-
 let client;
 
 async function start() {
@@ -33,7 +33,6 @@ async function start() {
         client = new TelegramClient(session, apiId, apiHash, {
             connectionRetries: 5,
         });
-
         await client.start({
             phoneNumber: async () => await input.text("Please enter your number: "),
             password: async () => await input.text("Please enter your password: "),
@@ -46,23 +45,16 @@ async function start() {
             fs.writeFileSync("session.txt", saveSession, {encoding: "utf-8"})
         }
         client.addEventHandler(eventPrint, new NewMessage({}));
-      await  client.invoke(new Api.messages.SendMessage({
-            message: "запущен",
-           peer: new Api.InputPeerChat({
-               chatId: BigInt(process.env.COMMAND_CHAT_ID),
-           })
-        }))
+        await sendMessageToCommand("запущен")
         // client.sendMessage(process.env.AUTHOR, {message: "Отъебаный Джо запущен..."})
     } catch (e) {
         console.error(e)
     }
 }
 
-
 async function eventPrint(event) {
     const message = event.message;
     let instruction
-
 
     // Checks if it's a private message (from user or bot)
     if (!event.isPrivate && message.senderId.value === authorId && event.chatId.value !== commandChatId) {
@@ -91,17 +83,17 @@ async function eventPrint(event) {
                 })
                 await client.invoke(instruction)
             }
-
-
         }
     } catch (e) {
-        await  client.invoke(new Api.messages.SendMessage({
-            message: `неудачно \n ${e.message}`,
-            peer: new Api.InputPeerChat({
-                chatId: BigInt(process.env.COMMAND_CHAT_ID),
-            })
-        }))
+        await sendMessageToCommand(`неудачно \n ${e.message}`)
     }
-
 }
 
+async function sendMessageToCommand(msg) {
+    await  client.invoke(new Api.messages.SendMessage({
+        message: msg,
+        peer: new Api.InputPeerChat({
+            chatId: BigInt(process.env.COMMAND_CHAT_ID),
+        })
+    }))
+}
