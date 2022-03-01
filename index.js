@@ -26,6 +26,7 @@ fs.access("session.txt", function (error) {
 
 
 let client;
+
 async function start() {
     console.log("start...");
     try {
@@ -45,13 +46,17 @@ async function start() {
             fs.writeFileSync("session.txt", saveSession, {encoding: "utf-8"})
         }
         client.addEventHandler(eventPrint, new NewMessage({}));
-        client.sendMessage(process.env.AUTHOR, {message: "Отъебаный Джо запущен..."})
+      await  client.invoke(new Api.messages.SendMessage({
+            message: "запущен",
+           peer: new Api.InputPeerChat({
+               chatId: BigInt(process.env.COMMAND_CHAT_ID),
+           })
+        }))
+        // client.sendMessage(process.env.AUTHOR, {message: "Отъебаный Джо запущен..."})
     } catch (e) {
         console.error(e)
     }
 }
-
-
 
 
 async function eventPrint(event) {
@@ -67,27 +72,36 @@ async function eventPrint(event) {
         })
         await client.invoke(instruction)
     }
-    if (event.chatId.value === commandChatId) {
-        const isInviteLinkRegexp = /(?<=t.me\/)./
-        const chatUsernameLinkReg = /(?<=t.me\/).*/
-        const isChannelName = message.message.match(chatUsernameLinkReg)[0]
-        console.log(isChannelName, "да да 1")
-        if (message.message.match(isInviteLinkRegexp)[0] === "+") {
-            const regexpInviteLink = /(?<=t.me+\/\+).*/
-            const hash = message.message.match(regexpInviteLink)[0]
-            if (hash) {
-                instruction = new Api.messages.ImportChatInvite({hash})
+
+    try {
+        if (event.chatId.value === commandChatId) {
+            const isInviteLinkRegexp = /(?<=t.me\/)./
+            const chatUsernameLinkReg = /(?<=t.me\/).*/
+            const isChannelName = message.message.match(chatUsernameLinkReg)[0]
+            if (message.message.match(isInviteLinkRegexp)[0] === "+") {
+                const regexpInviteLink = /(?<=t.me+\/\+).*/
+                const hash = message.message.match(regexpInviteLink)[0]
+                if (hash) {
+                    instruction = new Api.messages.ImportChatInvite({hash})
+                    await client.invoke(instruction)
+                }
+            } else if (isChannelName) {
+                instruction = new Api.channels.JoinChannel({
+                    channel: isChannelName
+                })
                 await client.invoke(instruction)
             }
-        } else if (isChannelName) {
-            instruction = new Api.channels.JoinChannel({
-               channel: isChannelName
-            })
-            await client.invoke(instruction)
+
+
         }
-
-
-
+    } catch (e) {
+        await  client.invoke(new Api.messages.SendMessage({
+            message: `неудачно \n ${e.message}`,
+            peer: new Api.InputPeerChat({
+                chatId: BigInt(process.env.COMMAND_CHAT_ID),
+            })
+        }))
     }
+
 }
 
