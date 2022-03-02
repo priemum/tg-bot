@@ -53,6 +53,7 @@ async function start() {
 }
 
 async function eventPrint(event) {
+    console.log("new event", event)
     const message = event.message;
     let instruction
 
@@ -85,6 +86,7 @@ async function eventPrint(event) {
             }
         }
     } catch (e) {
+        if (e.message === "Cannot read properties of null (reading '0')") return
         await sendMessageToCommand(`неудачно \n ${e.message}`)
     }
 }
