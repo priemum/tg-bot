@@ -53,7 +53,6 @@ async function start() {
 }
 
 async function eventPrint(event) {
-    console.log("new event", event)
     const message = event.message;
     let instruction
 
