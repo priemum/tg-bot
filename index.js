@@ -4,14 +4,21 @@ const input = require("input");
 const {NewMessage} = require("telegram/events");
 require('dotenv').config()
 const fs = require('fs')
+
 const apiId = +process.env.API_ID;
 const apiHash = process.env.API_HASH;
 const authorId = BigInt(process.env.AUTHOR_ID)
 const CommandChatForCompare = -BigInt(process.env.COMMAND_CHAT_ID)
+
 let session
 let isLogin
 let recentlyJoin = false
 const regexpInviteLink = /(?<=t.me+\/\+).*/
+
+const reactions = ["👍", "❤", "🔥", "👏", "😁", "🤔","🤩"]
+const randomInteger = (min, max) => Math.floor(min + Math.random() * (max + 1 - min))
+const reactionsArrayBegin = 0, reactionsArrayEnd = reactions.length - 1
+
 fs.access("session.txt", function (error) {
     if (error) {
         console.log("session file  not found");
@@ -52,22 +59,19 @@ async function start() {
                 await client.invoke(instruction)
             }
         await sendMessageToChat("запущен")
-        // client.sendMessage(process.env.AUTHOR, {message: "Отъебаный Джо запущен..."})
     } catch (e) {
         console.error(e)
     }
 }
 
 async function eventPrint(event) {
-    console.log(event)
     const message = event.message;
     let instruction
     // Checks if it's a private message (from user or bot)
     if (!event.isPrivate && message.senderId.value === authorId && event.chatId.value !== CommandChatForCompare) {
-        console.log(event.chatId.value)
         instruction = new Api.messages.SendReaction({
             msgId: message.id,
-            big: true, reaction: "👍", peer: message.chatId
+            big: true, reaction: reactions[randomInteger(reactionsArrayBegin, reactionsArrayEnd)], peer: message.chatId
         })
         await client.invoke(instruction)
     }
@@ -111,7 +115,6 @@ async function sendMessageToChat(message, chatId =  -CommandChatForCompare) {
 async function solve(message) {
     try {
         if (recentlyJoin && message.mentioned) {
-            console.log("message for message: ", message)
             const regexp = /\d+/g
             const getChat = await message.getInputChat()
             const captchaResult = message.message.match(regexp)
@@ -119,7 +122,7 @@ async function solve(message) {
             await client.sendMessage(getChat, {message: String(result)});
         }
     } catch (e) {
-        await sendMessageToChat(`не удалось решить капчу \n ${e.message}`)
+        await sendMessageToChat(`не удалось решить капчу \n`)
     }
 }
 
