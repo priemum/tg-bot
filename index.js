@@ -1,13 +1,13 @@
 const {TelegramClient, Api} = require("telegram");
 const {StringSession} = require("telegram/sessions");
 const input = require("input");
-const {NewMessage} = require("telegram/events"); // npm i input
+const {NewMessage} = require("telegram/events");
 require('dotenv').config()
 const fs = require('fs')
 const apiId = +process.env.API_ID;
 const apiHash = process.env.API_HASH;
 const authorId = BigInt(process.env.AUTHOR_ID)
-const commandChatIdForSendMessage = BigInt(process.env.COMMAND_CHAT_ID), CommandChatForCompare = -commandChatIdForSendMessage
+const CommandChatForCompare = -BigInt(process.env.COMMAND_CHAT_ID)
 let session
 let isLogin
 let recentlyJoin = false
@@ -34,7 +34,7 @@ async function start() {
         client = new TelegramClient(session, apiId, apiHash, {
             connectionRetries: 5,
         });
-        await client.start({
+         await client.start({
             phoneNumber: async () => await input.text("Please enter your number: "),
             password: async () => await input.text("Please enter your password: "),
             phoneCode: async () =>
@@ -51,9 +51,7 @@ async function start() {
                 const instruction = new Api.messages.ImportChatInvite({hash})
                 await client.invoke(instruction)
             }
-
-        await sendMessageToChat("запущен", commandChatIdForSendMessage)
-        // await sendMessageToCommand("запущен")
+        await sendMessageToChat("запущен")
         // client.sendMessage(process.env.AUTHOR, {message: "Отъебаный Джо запущен..."})
     } catch (e) {
         console.error(e)
@@ -61,7 +59,7 @@ async function start() {
 }
 
 async function eventPrint(event) {
-    // console.log(event)
+    console.log(event)
     const message = event.message;
     let instruction
     // Checks if it's a private message (from user or bot)
@@ -73,7 +71,6 @@ async function eventPrint(event) {
         })
         await client.invoke(instruction)
     }
-
     try {
         await solve(message)
         if (event.chatId.value === CommandChatForCompare && message.senderId.value === authorId) {
@@ -98,14 +95,11 @@ async function eventPrint(event) {
         }
     } catch (e) {
         if (e.message === "Cannot read properties of null (reading '0')") return
-        await sendMessageToChat(`неудачно \n ${e.message}`, commandChatIdForSendMessage)
-
+        await sendMessageToChat(`неудачно \n ${e.message}`)
     }
 }
 
-async function sendMessageToChat(message, chatId) {
-    // await client.sendMessage({chatId}, message)
-    console.log()
+async function sendMessageToChat(message, chatId =  -CommandChatForCompare) {
      await client.invoke(new Api.messages.SendMessage({
          message,
         peer: new Api.InputPeerChat({
@@ -117,19 +111,16 @@ async function sendMessageToChat(message, chatId) {
 async function solve(message) {
     try {
         if (recentlyJoin && message.mentioned) {
-            console.log("chatId", message.chatId)
+            console.log("message for message: ", message)
             const regexp = /\d+/g
-            const resultForConsoleLog = await message.getInputChat()
-            console.log("getInputChat :", resultForConsoleLog)
+            const getChat = await message.getInputChat()
             const captchaResult = message.message.match(regexp)
             const result = Number(captchaResult[0]) + Number(captchaResult[1])
-            await sendMessageToChat(String(result), -message.chatId.value)
+            await client.sendMessage(getChat, {message: String(result)});
         }
     } catch (e) {
-        await sendMessageToChat(`не удалось решить капчу \n ${e.message}`, commandChatIdForSendMessage)
+        await sendMessageToChat(`не удалось решить капчу \n ${e.message}`)
     }
-    // console.log(recentlyJoin, " from solve", event.mentioned, " its mentioned")
-
 }
 
 function recentlySet() {
