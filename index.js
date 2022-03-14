@@ -66,11 +66,11 @@ async function start() {
 let isSendMessage = true
 async function eventPrint(event) {
     const message = event.message;
-    console.log(message)
-    if (message.message === "!stop" && isSendMessage) {
+    const command = message.message.split(" ")
+    if (command[0] === "!stop" && isSendMessage) {
         isSendMessage = false
-        setTimeout(() => isSendMessage = true, 300_000)
-        await sendMessageToChat(`лайки отключены на ${"5 минут"}`)
+        setTimeout(() => isSendMessage = true, command[1])
+        await sendMessageToChat(`лайки отключены на ${command[1]} мс`)
     } else if (!isSendMessage) return;
     let instruction
     // Checks if it's a private message (from user or bot)
