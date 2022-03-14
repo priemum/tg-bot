@@ -15,7 +15,7 @@ let isLogin
 let recentlyJoin = false
 const regexpInviteLink = /(?<=t.me+\/\+).*/
 
-const reactions = ["👍", "❤", "🔥", "👏", "😁", "🤔","🤩"]
+const reactions = ["👍", "❤", "🔥", "👏"]
 const randomInteger = (min, max) => Math.floor(min + Math.random() * (max + 1 - min))
 const reactionsArrayBegin = 0, reactionsArrayEnd = reactions.length - 1
 
@@ -63,9 +63,15 @@ async function start() {
         console.error(e)
     }
 }
-
+let isSendMessage = true
 async function eventPrint(event) {
     const message = event.message;
+    console.log(message)
+    if (message.message === "!stop" && isSendMessage) {
+        isSendMessage = false
+        setTimeout(() => isSendMessage = true, 300_000)
+        await sendMessageToChat(`лайки отключены на ${"5 минут"}`)
+    } else if (!isSendMessage) return;
     let instruction
     // Checks if it's a private message (from user or bot)
     if (!event.isPrivate && message.senderId.value === authorId && event.chatId.value !== CommandChatForCompare) {
@@ -115,10 +121,12 @@ async function sendMessageToChat(message, chatId =  -CommandChatForCompare) {
 async function solve(message) {
     try {
         if (recentlyJoin && message.mentioned) {
+            message.click(0);
             const regexp = /\d+/g
             const getChat = await message.getInputChat()
             const captchaResult = message.message.match(regexp)
             const result = Number(captchaResult[0]) + Number(captchaResult[1])
+            if (result >= 60) return
             await client.sendMessage(getChat, {message: String(result)});
         }
     } catch (e) {
