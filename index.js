@@ -130,7 +130,8 @@ async function solve(message) {
             await client.sendMessage(getChat, {message: String(result)});
         }
     } catch (e) {
-        await sendMessageToChat(`не удалось решить капчу \n`)
+        // await sendMessageToChat(`не удалось решить капчу \n`)
+        console.log("captcha error")
     }
 }
 
