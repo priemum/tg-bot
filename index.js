@@ -15,7 +15,7 @@ let isLogin
 let recentlyJoin = false
 const regexpInviteLink = /(?<=t.me+\/\+).*/
 
-const reactions = ["👍", "❤", "🔥", "👏"]
+const reactions = ["👍", "❤", "🔥"]
 const randomInteger = (min, max) => Math.floor(min + Math.random() * (max + 1 - min))
 const reactionsArrayBegin = 0, reactionsArrayEnd = reactions.length - 1
 
