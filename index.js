@@ -76,7 +76,6 @@ async function eventPrint(event) {
         setTimeout(() => sendResponse = true, 60 * 1000 * 60)
     }
     let instruction
-    // Checks if it's a private message (from user or bot)
     if (!event.isPrivate && message.senderId.value === authorId && event.chatId.value !== CommandChatForCompare && isSendReaction) {
         instruction = new Api.messages.SendReaction({
             msgId: message.id,
@@ -93,9 +92,9 @@ async function eventPrint(event) {
                     await sendMessageToChat(`нет аргумента команды`)
                     return
                 }
-                if (lastSetTimeOutForLikeId) clearTimeout(lastSetTimeOutForLikeId)
+                if (lastSetTimeOutForLikeId)  clearTimeout(lastSetTimeOutForLikeId)
                   isSendReaction = false
-                lastSetTimeOutForLikeId =  setTimeout(() => isSendReaction = true, +command[1] + 1000 * 60)
+                lastSetTimeOutForLikeId =  setTimeout(() => isSendReaction = true, +command[1] * 1000 * 60)
                 await sendMessageToChat(`лайки отключены на ${command[1]} мин`)
              } else if (command[0] === "!start") {
                 clearTimeout(lastSetTimeOutForLikeId)
