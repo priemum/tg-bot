@@ -70,7 +70,7 @@ async function eventPrint(event) {
     if (command[0] === "!stop" && isSendMessage) {
         isSendMessage = false
         setTimeout(() => isSendMessage = true, +command[1] + 1000 * 60)
-        await sendMessageToChat(`лайки отключены на ${command[1]} сек`)
+        await sendMessageToChat(`лайки отключены на ${command[1]} мин`)
     } else if (!isSendMessage) return;
     let instruction
     // Checks if it's a private message (from user or bot)
