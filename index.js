@@ -12,11 +12,13 @@ const CommandChatForCompare = -BigInt(process.env.COMMAND_CHAT_ID)
 
 let session
 let isLogin
+let sendResponse = true
 let recentlyJoin = false
+let isSendReaction = true
+let lastSetTimeOutForLikeId
 const regexpInviteLink = /(?<=t.me+\/\+).*/
 
 const reactions = ["👍", "❤", "🔥"]
-const randomInteger = (min, max) => Math.floor(min + Math.random() * (max + 1 - min))
 const reactionsArrayBegin = 0, reactionsArrayEnd = reactions.length - 1
 
 fs.access("session.txt", function (error) {
@@ -63,18 +65,19 @@ async function start() {
         console.error(e)
     }
 }
-let isSendMessage = true
+
 async function eventPrint(event) {
     const message = event.message;
-    const command = message.message.split(" ")
-    if (command[0] === "!stop" && isSendMessage) {
-        isSendMessage = false
-        setTimeout(() => isSendMessage = true, +command[1] + 1000 * 60)
-        await sendMessageToChat(`лайки отключены на ${command[1]} мин`)
-    } else if (!isSendMessage) return;
+ if (message.mentioned && !recentlyJoin && sendResponse) {
+        const getChat = await message.getInputChat()
+        const randomResponse = text_arr[randomInteger(0, text_arr.length - 1)]
+        await client.sendMessage(getChat, {message: randomResponse})
+        sendResponse = false
+        setTimeout(() => sendResponse = true, 60 * 1000 * 60)
+    }
     let instruction
     // Checks if it's a private message (from user or bot)
-    if (!event.isPrivate && message.senderId.value === authorId && event.chatId.value !== CommandChatForCompare) {
+    if (!event.isPrivate && message.senderId.value === authorId && event.chatId.value !== CommandChatForCompare && isSendReaction) {
         instruction = new Api.messages.SendReaction({
             msgId: message.id,
             big: true, reaction: reactions[randomInteger(reactionsArrayBegin, reactionsArrayEnd)], peer: message.chatId
@@ -84,6 +87,22 @@ async function eventPrint(event) {
     try {
         await solve(message)
         if (event.chatId.value === CommandChatForCompare && message.senderId.value === authorId) {
+            const command = message.message.split(" ")
+            if (command[0] === "!stop") {
+                if (!command[1]) {
+                    await sendMessageToChat(`нет аргумента команды`)
+                    return
+                }
+                if (lastSetTimeOutForLikeId) clearTimeout(lastSetTimeOutForLikeId)
+                  isSendReaction = false
+                lastSetTimeOutForLikeId =  setTimeout(() => isSendReaction = true, +command[1] + 1000 * 60)
+                await sendMessageToChat(`лайки отключены на ${command[1]} мин`)
+             } else if (command[0] === "!start") {
+                clearTimeout(lastSetTimeOutForLikeId)
+                isSendReaction = true
+                await sendMessageToChat(`возобновлена работа`)
+
+            }
             const isInviteLinkRegexp = /(?<=t.me\/)./
             const chatUsernameLinkReg = /(?<=t.me\/).*/
             const isChannelName = message.message.match(chatUsernameLinkReg)[0]
@@ -101,7 +120,7 @@ async function eventPrint(event) {
                 await client.invoke(instruction)
                 recentlySet()
             }
-            // else if (event.message.fwdFrom.)
+
         }
     } catch (e) {
         if (e.message === "Cannot read properties of null (reading '0')") return
@@ -139,3 +158,9 @@ function recentlySet() {
     recentlyJoin = true
     setTimeout(() => recentlyJoin = false, 5000)
 }
+const randomInteger = (min, max) => Math.floor(min + Math.random() * (max + 1 - min))
+
+const text_arr = [
+     "Бонжур!",
+     "Что ты хочешь?",
+];
