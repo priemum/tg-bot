@@ -4,7 +4,7 @@ const input = require("input");
 const { NewMessage } = require("telegram/events");
 require("dotenv").config();
 const fs = require("fs");
-
+const { randomInteger, randomResponse } = require("./utils.js");
 const apiId = +process.env.API_ID;
 const apiHash = process.env.API_HASH;
 const authorId = BigInt(process.env.AUTHOR_ID);
@@ -36,7 +36,7 @@ fs.access("session.txt", function (error) {
   start().then(() => console.log("You should now be connected."));
 });
 
-async function start() {
+const start = async () => {
   console.log("start...");
   try {
     client = new TelegramClient(session, apiId, apiHash, {
@@ -65,14 +65,13 @@ async function start() {
   } catch (e) {
     console.error(e);
   }
-}
+};
 
-async function eventPrint(event) {
+const eventPrint = async (event) => {
   const message = event.message;
   if (message.mentioned && !recentlyJoin && sendResponse) {
     const getChat = await message.getInputChat();
-    const randomResponse = text_arr[randomInteger(0, text_arr.length - 1)];
-    await client.sendMessage(getChat, { message: randomResponse });
+    await client.sendMessage(getChat, { message: randomResponse() });
     sendResponse = false;
     setTimeout(() => (sendResponse = true), 60 * 1000 * 60);
   }
@@ -138,9 +137,9 @@ async function eventPrint(event) {
     if (e.message === "Cannot read properties of null (reading '0')") return;
     await sendMessageToChat(`неудачно \n ${e.message}`);
   }
-}
+};
 
-async function sendMessageToChat(message, chatId = -CommandChatForCompare) {
+const sendMessageToChat = async (message, chatId = -CommandChatForCompare) => {
   await client.invoke(
     new Api.messages.SendMessage({
       message,
@@ -149,9 +148,9 @@ async function sendMessageToChat(message, chatId = -CommandChatForCompare) {
       }),
     })
   );
-}
+};
 
-async function solve(message) {
+const solve = async (message) => {
   try {
     if (recentlyJoin && message.mentioned) {
       message.click(0);
@@ -166,13 +165,9 @@ async function solve(message) {
     // await sendMessageToChat(`не удалось решить капчу \n`)
     console.log("captcha error");
   }
-}
+};
 
-function recentlySet() {
+const recentlySet = () => {
   recentlyJoin = true;
   setTimeout(() => (recentlyJoin = false), 5000);
-}
-const randomInteger = (min, max) =>
-  Math.floor(min + Math.random() * (max + 1 - min));
-
-const text_arr = ["Бонжур!", "Что ты хочешь?"];
+};
