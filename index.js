@@ -2,7 +2,7 @@ const { TelegramClient, Api } = require("telegram");
 const { StringSession } = require("telegram/sessions");
 const input = require("input");
 const { NewMessage } = require("telegram/events");
-require("dotenv").config();
+// require("dotenv").config();
 const fs = require("fs");
 const { randomInteger, randomResponse } = require("./utils.js");
 const apiId = +process.env.API_ID;
