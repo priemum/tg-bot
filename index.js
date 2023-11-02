@@ -9,7 +9,7 @@ const apiId = +process.env.API_ID;
 const apiHash = process.env.API_HASH;
 const authorId = BigInt(process.env.AUTHOR_ID);
 const CommandChatForCompare = -BigInt(process.env.COMMAND_CHAT_ID);
-
+                
 let session;
 let isLogin;
 let sendResponse = true;
